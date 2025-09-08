@@ -7,7 +7,7 @@ mode="664"
 
 if [ $# -ne 1 ]; then
 	echo "Wrong number of arguments"
-	echo "usage: $0 module_name"
+	echo "usage: $0 module_name [ module_path ]"
 	echo "Will create a corresponding device /dev/module_name associated with module_name.ko"
 	exit 1
 fi
@@ -21,8 +21,13 @@ else
     group="wheel"
 fi
 
+# ./$module.ko can fail to find the files if the script
+# is not called from inside that directory
+# get current dir
+DIR=$(realpath $(dirname $0))
+
 echo "Load our module, exit on failure"
-insmod ./$module.ko $* || exit 1
+insmod ${DIR}/$module.ko $* || exit 1
 echo "Get the major number (allocated with allocate_chrdev_region) from /proc/devices"
 major=$(awk "\$2==\"$module\" {print \$1}" /proc/devices)
 if [ ! -z ${major} ]; then
